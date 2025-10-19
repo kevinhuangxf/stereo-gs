@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="description"
+        content="Stereo-GS: Multi-View Stereo Vision Model for Generalizable 3D Gaussian Splatting Reconstruction">
+  <meta name="keywords" content="Stereo-GS, 3D Gaussian Splatting, Multi-View Stereo">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Stereo-GS: Multi-View Stereo Vision Model for Generalizable 3D Gaussian Splatting Reconstruction</title>
+
+  <!-- Global site tag (gtag.js) - Google Analytics -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-PYVRSFMDRL"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+
+    function gtag() {
+      dataLayer.push(arguments);
+    }
+
+    gtag('js', new Date());
+
+    gtag('config', 'G-PYVRSFMDRL');
+  </script>
+
+  <link href="https://fonts.googleapis.com/css?family=Google+Sans|Noto+Sans|Castoro"
+        rel="stylesheet">
+
+  <link rel="stylesheet" href="./static/css/bulma.min.css">
+  <link rel="stylesheet" href="./static/css/bulma-carousel.min.css">
+  <link rel="stylesheet" href="./static/css/bulma-slider.min.css">
+  <link rel="stylesheet" href="./static/css/fontawesome.all.min.css">
+  <link rel="stylesheet"
+        href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css">
+  <link rel="stylesheet" href="./static/css/index.css">
+  <link rel="icon" href="./static/images/favicon.svg">
+
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <script defer src="./static/js/fontawesome.all.min.js"></script>
+  <script src="./static/js/bulma-carousel.min.js"></script>
+  <script src="./static/js/bulma-slider.min.js"></script>
+  <script src="./static/js/index.js"></script>
+</head>
+<body>
+
+<nav class="navbar" role="navigation" aria-label="main navigation">
+  <div class="navbar-brand">
+    <a role="button" class="navbar-burger" aria-label="menu" aria-expanded="false">
+      <span aria-hidden="true"></span>
+      <span aria-hidden="true"></span>
+      <span aria-hidden="true"></span>
+    </a>
+  </div>
+  <div class="navbar-menu">
+    <div class="navbar-start" style="flex-grow: 1; justify-content: center;">
+      <a class="navbar-item" href="https://kevinhuangxf.github.io/GaussianMarker/">
+      <span class="icon">
+          <i class="fas fa-home"></i>
+      </span>
+      </a>
+
+      <div class="navbar-item has-dropdown is-hoverable">
+        <a class="navbar-link">
+          More Research
+        </a>
+        <div class="navbar-dropdown">
+          <a class="navbar-item" href="https://kevinhuangxf.github.io/GaussianMarker/">
+            GaussianMarker: Uncertainty-Aware Copyright Protection of 3D Gaussian Splatting
+          </a>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</nav>
+
+
+<section class="hero">
+  <div class="hero-body">
+    <div class="container is-max-desktop">
+      <div class="columns is-centered">
+        <div class="column has-text-centered">
+          <h1 class="title is-1 publication-title">Stereo-GS: Multi-View Stereo Vision Model for Generalizable 3D Gaussian Splatting Reconstruction</h1>
+            <small>
+              <span style="font-size: 200%;">ACM Multimedia 2025</span>
+            </small>
+          <div class="is-size-5 publication-authors">
+            <span class="author-block">
+              <a href="https://kevinhuangxf.github.io">Xiufeng Huang</a><sup>1,2</sup>,</span>
+            <span class="author-block">
+              Ka Chun Cheung<sup>2</sup>,
+            </span>
+            <span class="author-block">
+              Runmin Cong<sup>3</sup>,
+            </span>
+            <span class="author-block">
+              Simon See<sup>2</sup>,
+            </span>
+            <span class="author-block">
+              <a href="https://wanrenjie.github.io/">Renjie Wan</a><sup>1</sup>
+            </span>
+          </div>
+
+          <div class="is-size-5 publication-authors">
+            <span class="author-block"><sup>1</sup>Department of Computer Science, Hong Kong Baptist University,</span><br>
+            <span class="author-block"><sup>2</sup>NVIDIA AI Technology Center</span><br>
+            <span class="author-block"><sup>3</sup>School of Control Science and Engineering, Shandong University</span><br>
+          </div>
+
+          <div class="column has-text-centered">
+            <div class="publication-links">
+              <!-- PDF Link. -->
+              <span class="link-block">
+                <a href="https://arxiv.org/pdf/2507.14921"
+                   class="external-link button is-normal is-rounded is-dark">
+                  <span class="icon">
+                      <i class="fas fa-file-pdf"></i>
+                  </span>
+                  <span>Paper</span>
+                </a>
+              </span>
+              <span class="link-block">
+                <a href="https://arxiv.org/abs/2507.14921"
+                   class="external-link button is-normal is-rounded is-dark">
+                  <span class="icon">
+                      <i class="ai ai-arxiv"></i>
+                  </span>
+                  <span>arXiv</span>
+                </a>
+              </span>
+              <!-- Code Link. -->
+              <span class="link-block">
+                <a href="https://github.com/kevinhuangxf/stereo-gs"
+                   class="external-link button is-normal is-rounded is-dark">
+                  <span class="icon">
+                      <i class="fab fa-github"></i>
+                  </span>
+                  <span>Code</span>
+                  </a>
+              </span>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container is-max-desktop">
+
+    <!-- Figure_1. -->
+    <div class="columns is-centered has-text-centered">
+      <div class="column is-four-fifths">
+        <div style="text-align: center;">
+          <img src="assets/fig_1.png" alt="Figure 1"  width="80%"/>
+        </div>
+      </div>
+    </div>
+    <!--/ Figure_1. -->
+
+    <!-- Abstract. -->
+    <div class="columns is-centered has-text-centered">
+      <div class="column is-four-fifths">
+        <h2 class="title is-3">Abstract</h2>
+        <div class="content has-text-justified">
+          <p>
+          Generalizable 3D Gaussian Splatting reconstruction showcases advanced Image-to-3D content creation but requires substantial computational resources and large datasets, posing challenges to training models from scratch. Current methods usually entangle the
+          prediction of 3D Gaussian geometry and appearance, which rely
+          heavily on data-driven priors and result in slow regression speeds.
+          To address this, we propose Stereo-GS, a disentangled framework
+          for efficient 3D Gaussian prediction. Our method extracts features
+          from local image pairs using a stereo vision backbone and fuses
+          them via global attention blocks. Dedicated point and Gaussian
+          prediction heads generate multi-view point-maps for geometry and
+          Gaussian features for appearance, combined as GS-maps to represent the 3DGS object. A refinement network enhances these GSmaps for high-quality reconstruction. Unlike existing methods that
+          depend on camera parameters, our approach achieves pose-free 3D
+          reconstruction, improving robustness and practicality. By reducing resource demands while maintaining high-quality outputs, StereoGS provides an efficient, scalable solution for real-world 3D content
+          generation.
+          </p>
+        </div>
+      </div>
+    </div>
+    <!--/ Abstract. -->
+
+    <!-- Framework. -->
+    <div class="column is-centered has-text-centered">
+      <h2 class="title is-3">Framework</h2>
+    </div>
+    <div class="columns is-centered has-text-centered">
+      <div class="column is-four-fifths">
+        <section class="hero is-light is-small">
+          <div class="hero-body">
+            <div class="container">
+                <div style="text-align: center;">
+                  <img src="assets/framework.png" alt="Figure 1"  width="100%"/>
+                </div>
+                <div class="content has-text-justified">
+                  <p>
+                   Our proposed Stereo-GS generates multi-view GS-maps in a disentangled manner for predicting 3DGS geometry and
+                   appearance, enabling high-quality 3D Gaussian reconstruction. It first uses a stereo vision model to extract local feature tokens
+                   from image pairs, which are fused via multi-view global attention blocks. A point prediction head estimates geometry through
+                   multi-view point-maps, while a Gaussian prediction head generates Gaussian features for appearance. These are combined
+                   into GS-maps representing the 3DGS object, refined by a cross-view attention-based network, and rendered as per-pixel 3D
+                   Gaussians for novel views during training.
+                  </p>
+                </div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+    <!--/ Framework. -->
+
+  </div>
+</section>
+
+<!-- GIF for displaying qualitative results -->
+<!-- <div class="columns is-centered has-text-centered">
+  <div class="column is-four-fifths">
+    <h2 class="title is-3">Qualitative Results</h2>
+    <div style="text-align: center;">
+      <img src="assets/blender.gif" alt="Qualitative Results" width="100%">
+    </div>
+  </div>
+</div> -->
+<!--/ GIF for displaying qualitative results -->
+
+
+<!-- <section class="section" id="BibTeX">
+  <div class="container is-max-desktop content">
+    <h2 class="title">BibTeX</h2>
+    <pre><code>@article{huang2024geometrysticker,
+  title     = {GeometrySticker: Enabling Ownership Claim of Recolorized Neural Radiance Fields},
+  author    = {Xiufeng Huang, Ka Chun Cheung, Simon See, Renjie Wan},
+  journal   = {ECCV},
+  year      = {2024},
+}</code></pre>
+  </div>
+</section> -->
+
+
+<footer class="footer">
+  <div class="container">
+    <div class="columns is-centered">
+      <div class="column is-8">
+        <div class="content">
+          <p>
+            This website is licensed under a <a rel="license"
+                                                href="http://creativecommons.org/licenses/by-sa/4.0/">Creative
+            Commons Attribution-ShareAlike 4.0 International License</a>.
+          </p>
+          <p>
+            This means you are free to borrow the <a
+              href="https://github.com/nerfies/nerfies.github.io">source code</a> of this website,
+            we just ask that you link back to this page in the footer.
+            Please remember to remove the analytics code included in the header of the website which
+            you do not want on your website.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>
