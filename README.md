@@ -21,13 +21,10 @@ pip install -r requirements.txt
 
 ## Download Checkpoints
 
-Download the pre-trained checkpoints and place them in the `ckpts/` folder:
+The download script will automatically put the checkpoints and data to the target folder.
 
 ```bash
-# Download checkpoint (example)
-mkdir -p ckpts
-# Place your checkpoint files here, e.g.:
-# ckpts/model.safetensors
+python download.py --with-data
 ```
 
 ## Inference
@@ -71,7 +68,7 @@ python infer_mvdream.py stereogs \
 python test.py stereogs \
     --resume ./ckpts/model.safetensors \
     --workspace ./workspace_eval \
-    --eval-views-path-json /path/to/eval_dataset.json
+    --eval-views-path-json ./data/gso_test_4v.json
 ```
 
 <!-- ## Available Configs

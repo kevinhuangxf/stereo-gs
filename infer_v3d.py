@@ -46,22 +46,6 @@ if opt.resume is not None:
     else:
         ckpt = torch.load(opt.resume, map_location='cpu')
     
-    # Remap keys for backward compatibility
-    remapped_ckpt = {}
-    remap_count = 0
-    for k, v in ckpt.items():
-        new_k = k
-        if k.startswith('mast3r_model.'):
-            new_k = k.replace('mast3r_model.', 'stereo_encoder.')
-            remap_count += 1
-        elif k.startswith('encoder.'):
-            new_k = k.replace('encoder.', 'stereo_encoder.')
-            remap_count += 1
-        remapped_ckpt[new_k] = v
-    if remap_count > 0:
-        print(f"[INFO] Remapped {remap_count} checkpoint keys to stereo_encoder.*")
-    ckpt = remapped_ckpt
-    
     # Tolerant load (only load matching shapes)
     state_dict = model.state_dict()
     matched = 0
