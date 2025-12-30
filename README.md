@@ -99,6 +99,19 @@ stereo-gs/
 └── test.py              # Testing script
 ```
 
+## Citation
+
+If you find this work useful, please cite:
+
+```bibtex
+@inproceedings{huang2025stereogs,
+      title     = {Stereo-GS: Multi-View Stereo Vision Model for Generalizable 3D Gaussian Splatting Reconstruction},
+      author    = {Xiufeng Huang, Ka Chun Cheung, Runmin Cong, Simon See, Renjie Wan},
+      booktitle = {ACM Multimedia},
+      year      = {2025}
+}
+```
+
 ## Acknowledgement
 
 This project is based on [MASt3R](https://github.com/naver/mast3r) and [LGM](https://github.com/3DTopia/LGM).
