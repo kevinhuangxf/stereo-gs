@@ -2,7 +2,7 @@
 
 Stereo-GS: Multi-View Stereo Vision Model for Generalizable 3D Gaussian Splatting Reconstruction (ACM MM 2025)
 
-[Paper]() | [Project]()
+[Paper](https://arxiv.org/abs/2507.14921) | [Project](https://kevinhuangxf.github.io/stereo-gs/)
 
 ## Installation
 
@@ -32,36 +32,38 @@ mkdir -p ckpts
 
 ## Inference
 
-### Inference with Pre-generated Multi-View Images (e.g., from V3D)
+### Inference V3D
+
+Please reference the [V3D](https://github.com/heheyas/V3D) for generating a sequency of multi-view images. We provide an example under the [data/basketball](data/basketball) path.
 
 **4 views:**
 ```bash
-python infer.py stereogs \
+python infer_v3d.py stereogs \
     --resume ./ckpts/model.safetensors \
-    --workspace ./output \
-    --test-path ./data_test/v3d_test
+    --workspace ./output/basketball \
+    --test-path ./data/basketball
 ```
 
 **6 views:**
 ```bash
 python infer_v3d.py stereogs_6v \
     --resume ./ckpts/model.safetensors \
-    --workspace ./output/basketball \
-    --test-path ./data_test/basketball
+    --workspace ./output/basketball_6v \
+    --test-path ./data/basketball
 ```
 
-The `--test-path` should point to a folder containing images. The script will auto-detect and select evenly-spaced images.
+The `--test-path` should point to a folder containing the [V3D](https://github.com/heheyas/V3D) generated images. The script will auto-detect and select evenly-spaced images.
 
-<!-- ### Inference with MVDream
+### Inference with MVDream
 
 Generate multi-view images from a single RGBA image:
 
 ```bash
 python infer_mvdream.py stereogs \
     --resume ./ckpts/model.safetensors \
-    --workspace ./output \
-    --test-path ./data_test/bird_rgba.png
-``` -->
+    --workspace ./output/bubble_mart_blue \
+    --test-path ./data/bubble_mart_blue.png
+```
 
 ## Testing
 
@@ -72,14 +74,14 @@ python test.py stereogs \
     --eval-views-path-json /path/to/eval_dataset.json
 ```
 
-## Available Configs
+<!-- ## Available Configs
 
 | Config | Input Views | UNet Refinement | Description |
 |--------|-------------|-----------------|-------------|
 | `stereogs` | 4 | Yes | Default 4-view with UNet |
 | `stereogs_6v` | 6 | Yes | 6-view with UNet |
 | `stereogs_no_refinement` | 4 | No | Direct Gaussian prediction |
-| `stereogs_6v_no_refinement` | 6 | No | 6-view direct Gaussian |
+| `stereogs_6v_no_refinement` | 6 | No | 6-view direct Gaussian | -->
 
 ## Project Structure
 
@@ -95,10 +97,9 @@ stereo-gs/
 ├── mast3r/              # MASt3R stereo matching
 ├── croco/               # CroCo backbone
 ├── mvdream/             # MVDream multi-view generation
-├── infer.py             # 4-view inference
-├── infer_v3d.py         # N-view inference
+├── infer_v3d.py         # V3D inference
 ├── infer_mvdream.py     # MVDream inference
-└── eval_stereogs.py     # Evaluation script
+└── test.py              # Testing script
 ```
 
 ## Acknowledgement

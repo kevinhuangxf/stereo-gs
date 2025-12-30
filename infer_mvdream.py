@@ -1,5 +1,9 @@
+"""
+Inference script for StereoGS model with MVDream input.
+Generates 3D Gaussian Splats from a single image using MVDream for multi-view generation.
+"""
+
 import os
-import re
 import tyro
 import glob
 import imageio
@@ -10,10 +14,13 @@ import torch.nn.functional as F
 from safetensors.torch import load_file
 import rembg
 
+import kiui
+from kiui.op import recenter
 from kiui.cam import orbit_camera
 
 from core.options import AllConfigs
 from core.stereogs import StereoGS
+from mvdream.pipeline_mvdream import MVDreamPipeline
 
 from dust3r.utils.image import load_images
 from dust3r.inference import inference
@@ -25,10 +32,6 @@ minmax_norm = lambda x: (x - x.min()) / (x.max() - x.min())
 
 # Parse options
 opt = tyro.cli(AllConfigs)
-
-# Get number of input views from config
-NUM_INPUT_VIEWS = opt.num_input_views
-print(f"[INFO] Using {NUM_INPUT_VIEWS} input views")
 
 # Device setup
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -94,107 +97,80 @@ proj_matrix[2, 2] = (opt.zfar + opt.znear) / (opt.zfar - opt.znear)
 proj_matrix[3, 2] = - (opt.zfar * opt.znear) / (opt.zfar - opt.znear)
 proj_matrix[2, 3] = 1
 
+# Load MVDream pipeline
+print("[INFO] Loading MVDream pipeline...")
+pipe = MVDreamPipeline.from_pretrained(
+    "ashawkey/imagedream-ipmv-diffusers",
+    torch_dtype=torch.float16,
+    trust_remote_code=True,
+)
+pipe = pipe.to(device)
+
 # Load rembg for background removal
 bg_remover = rembg.new_session()
 
 
-def process(opt, folder_path):
-    """Process a folder containing pre-generated multi-view images."""
-    name = os.path.basename(folder_path.rstrip('/'))
-    print(f'[INFO] Processing {folder_path} --> {name}')
+def process(opt, path):
+    """Process a single image and generate 3D Gaussian Splats."""
+    name = os.path.splitext(os.path.basename(path))[0]
+    print(f'[INFO] Processing {path} --> {name}')
     os.makedirs(opt.workspace, exist_ok=True)
     
-    # Auto-detect and sort images in folder by natural numeric order
-    all_images = sorted(
-        [f for f in os.listdir(folder_path) if f.lower().endswith(('.png', '.jpg', '.jpeg'))],
-        key=lambda x: int(re.search(r'\d+', x).group()) if re.search(r'\d+', x) else 0
-    )
-    total_images = len(all_images)
-    print(f'[INFO] Found {total_images} images in {folder_path}')
+    # Load and preprocess input image
+    input_image = kiui.read_image(path, mode='uint8')
     
-    if total_images < NUM_INPUT_VIEWS:
-        raise ValueError(f"Need at least {NUM_INPUT_VIEWS} images, but found only {total_images}")
+    # Background removal
+    carved_image = rembg.remove(input_image, session=bg_remover)  # [H, W, 4]
+    mask = carved_image[..., -1] > 0
     
-    # Calculate interval for evenly-spaced selection
-    interval = max(1, total_images // NUM_INPUT_VIEWS)
+    # Recenter
+    image = recenter(carved_image, mask, border_ratio=0.2)
     
-    # Load and preprocess images
-    target_size = 256  # Target resolution
-    mv_image = []
-    selected_paths = []
+    # Normalize to [0, 1]
+    image = image.astype(np.float32) / 255.0
     
-    for i in range(NUM_INPUT_VIEWS):
-        idx = min(i * interval, total_images - 1)
-        img_path = os.path.join(folder_path, all_images[idx])
-        selected_paths.append(img_path)
-        print(f'[INFO] Loading image {i+1}/{NUM_INPUT_VIEWS}: {img_path}')
-        
-        input_image = imageio.imread(img_path)
-        
-        # Background removal (always applied, matching mast3r_6v)
-        carved_image = rembg.remove(input_image, session=bg_remover)  # [H, W, 4]
-        
-        # Don't recenter - use carved image directly (matching mast3r_6v)
-        image = carved_image
-        
-        # Normalize to [0, 1]
-        image = image.astype(np.float32) / 255.0
-        
-        # RGBA to RGB with alpha blending
-        if image.shape[-1] == 4:
-            image = image[..., :3] * image[..., 3:4]
-        
-        # Resize to target size if needed
-        if image.shape[0] != target_size or image.shape[1] != target_size:
-            # Use torch for resizing
-            image_tensor = torch.from_numpy(image).permute(2, 0, 1).unsqueeze(0)  # [1, C, H, W]
-            image_tensor = F.interpolate(image_tensor, size=(target_size, target_size), mode='bilinear', align_corners=False)
-            image = image_tensor.squeeze(0).permute(1, 2, 0).numpy()  # [H, W, C]
-        
-        mv_image.append(image)
+    # RGBA to RGB with alpha blending
+    if image.shape[-1] == 4:
+        image = image[..., :3] * image[..., 3:4]
     
-    mv_image = np.stack(mv_image, axis=0)  # [N, 256, 256, 3]
+    # Generate multi-view images using MVDream
+    print("[INFO] Generating multi-view images with MVDream...")
+    tik = time.time()
+    mv_image = pipe('', image, guidance_scale=5.0, num_inference_steps=30, elevation=0)
+    mv_image = np.stack([mv_image[1], mv_image[2], mv_image[3], mv_image[0]], axis=0)  # [4, 256, 256, 3]
+    tok = time.time()
+    print(f'[INFO] MVDream took {tok - tik:.2f}s')
     
-    # Save preprocessed images for debugging
+    # Save intermediate multi-view images
     mv_dir = os.path.join(opt.workspace, 'mv_images')
     os.makedirs(mv_dir, exist_ok=True)
-    for i in range(NUM_INPUT_VIEWS):
+    for i in range(4):
         imageio.imwrite(os.path.join(mv_dir, f'{name}_mv_{i}.png'), (mv_image[i] * 255).astype(np.uint8))
     
     with torch.no_grad():
-        # Load images for StereoGS using dust3r's loader
-        mv_paths = [os.path.join(mv_dir, f'{name}_mv_{i}.png') for i in range(NUM_INPUT_VIEWS)]
+        # Load images for StereoGS
+        mv_paths = [os.path.join(mv_dir, f'{name}_mv_{i}.png') for i in range(4)]
         images = load_images(mv_paths, size=256, square_ok=True, verbose=False)
         
         # Prepare image pairs for stereo encoder
-        # Group images: even indices -> images[0], odd indices -> images[1]
-        for i in range(NUM_INPUT_VIEWS):
+        for i in range(4):
             if i % 2 == 0 and i != 0:
-                images[0]['img'] = torch.cat((images[0]['img'], images[i]['img']), dim=0)
+                images[0]['img'] = torch.cat((images[0]['img'], images[i]['img']), dim=0).unsqueeze(0)
             elif i % 2 == 1 and i != 1:
-                images[1]['img'] = torch.cat((images[1]['img'], images[i]['img']), dim=0)
+                images[1]['img'] = torch.cat((images[1]['img'], images[i]['img']), dim=0).unsqueeze(0)
         
-        images[0]['img'] = images[0]['img'].unsqueeze(0)
-        images[1]['img'] = images[1]['img'].unsqueeze(0)
-        
-        # Prepare camera poses (evenly distributed around 360 degrees at elevation 0)
+        # Prepare camera poses
         cam_poses = np.stack([
-            orbit_camera(0, i * (360 // NUM_INPUT_VIEWS), radius=opt.cam_radius) 
-            for i in range(NUM_INPUT_VIEWS)
+            orbit_camera(0, 0, radius=opt.cam_radius),
+            orbit_camera(0, 90, radius=opt.cam_radius),
+            orbit_camera(0, 180, radius=opt.cam_radius),
+            orbit_camera(0, 270, radius=opt.cam_radius),
         ], axis=0)
         cam_poses = torch.from_numpy(cam_poses)
         
-        # Prepare rays - order to match image grouping (even first, then odd)
+        # Prepare rays
         rays = []
-        ray_indices = []
-        for i in range(NUM_INPUT_VIEWS):
-            if i % 2 == 0:
-                ray_indices.append(i)
-        for i in range(NUM_INPUT_VIEWS):
-            if i % 2 != 0:
-                ray_indices.append(i)
-        
-        for i in ray_indices:
+        for i in [0, 2, 1, 3]:
             rays_o, rays_d = get_rays(cam_poses[i], 256, 256, opt.fovy)
             rays_plucker = torch.cat([torch.cross(rays_o, rays_d, dim=-1), rays_d], dim=-1)
             rays.append(rays_plucker)
@@ -230,7 +206,7 @@ def process(opt, folder_path):
         
         if model.use_unet_refinement:
             # UNet mode: use desc features
-            N_feat, H_feat, W_feat, C_feat = pred1['desc'].shape
+            N, H_feat, W_feat, C_feat = pred1['desc'].shape
             pred1['desc'] = pred1['desc'].view(B, V, H_feat, W_feat, C_feat)
             pred2['desc'] = pred2['desc'].view(B, V, H_feat, W_feat, C_feat)
             
@@ -259,8 +235,8 @@ def process(opt, folder_path):
         print("[INFO] Rendering 360 video...")
         images_rendered = []
         depths = []
-        elevation = -10  # Match mast3r_6v
-        render_radius = 1.85  # Match mast3r_6v (hardcoded)
+        elevation = -10
+        render_radius = 1.85
         
         if getattr(opt, 'fancy_video', False):
             azimuth = np.arange(0, 720, 4, dtype=np.int32)
@@ -324,30 +300,16 @@ def process(opt, folder_path):
 
 # Main execution
 if __name__ == '__main__':
-    assert opt.test_path is not None, "Please provide --test-path to the folder containing pre-generated images"
+    assert opt.test_path is not None, "Please provide --test-path to the input image(s)"
     
     if os.path.isdir(opt.test_path):
-        # Check if this folder directly contains images
-        all_images = [f for f in os.listdir(opt.test_path) if f.lower().endswith(('.png', '.jpg', '.jpeg'))]
-        
-        if len(all_images) >= NUM_INPUT_VIEWS:
-            # Folder with enough images - process directly
-            process(opt, opt.test_path)
-        else:
-            # Multiple subfolders, each with images
-            subfolders = sorted([
-                os.path.join(opt.test_path, d) 
-                for d in os.listdir(opt.test_path) 
-                if os.path.isdir(os.path.join(opt.test_path, d))
-            ])
-            print(f"[INFO] Processing {len(subfolders)} subfolder(s)...")
-            for folder in subfolders:
-                try:
-                    process(opt, folder)
-                except Exception as e:
-                    print(f"[ERROR] Failed to process {folder}: {e}")
+        file_paths = glob.glob(os.path.join(opt.test_path, "*"))
     else:
-        raise ValueError(f"--test-path must be a directory containing pre-generated images, got: {opt.test_path}")
+        file_paths = [opt.test_path]
+    
+    print(f"[INFO] Processing {len(file_paths)} file(s)...")
+    for path in file_paths:
+        process(opt, path)
     
     print("[INFO] Done!")
 
