@@ -164,36 +164,39 @@
     </div>
     <!-- End Youtube Video. -->
 
-    <!-- Figure_1. -->
-    <div class="columns is-centered has-text-centered">
-      <div class="column is-four-fifths">
-        <div style="text-align: center;">
-          <img src="assets/fig_1.png" alt="Figure 1"  width="80%"/>
-        </div>
-      </div>
-    </div>
-    <!--/ Figure_1. -->
-
     <!-- Abstract. -->
+    <div class="column is-centered has-text-centered">
+      <h2 class="title is-3">Abstract</h2>
+    </div>
     <div class="columns is-centered has-text-centered">
       <div class="column is-four-fifths">
-        <h2 class="title is-3">Abstract</h2>
-        <div class="content has-text-justified">
-          <p>
-          Generalizable 3D Gaussian Splatting reconstruction showcases advanced Image-to-3D content creation but requires substantial computational resources and large datasets, posing challenges to training models from scratch. Current methods usually entangle the
-          prediction of 3D Gaussian geometry and appearance, which rely
-          heavily on data-driven priors and result in slow regression speeds.
-          To address this, we propose Stereo-GS, a disentangled framework
-          for efficient 3D Gaussian prediction. Our method extracts features
-          from local image pairs using a stereo vision backbone and fuses
-          them via global attention blocks. Dedicated point and Gaussian
-          prediction heads generate multi-view point-maps for geometry and
-          Gaussian features for appearance, combined as GS-maps to represent the 3DGS object. A refinement network enhances these GSmaps for high-quality reconstruction. Unlike existing methods that
-          depend on camera parameters, our approach achieves pose-free 3D
-          reconstruction, improving robustness and practicality. By reducing resource demands while maintaining high-quality outputs, StereoGS provides an efficient, scalable solution for real-world 3D content
-          generation.
-          </p>
-        </div>
+        <section class="hero is-light is-small">
+          <div class="hero-body">
+            <div class="container">
+                <!-- Figure_1. -->
+                <div style="text-align: center;">
+                  <img src="assets/fig_1.png" alt="Figure 1" width="100%"/>
+                </div>
+                <!--/ Figure_1. -->
+                <div class="content has-text-justified">
+                  <p>
+                  Generalizable 3D Gaussian Splatting reconstruction showcases advanced Image-to-3D content creation but requires substantial computational resources and large datasets, posing challenges to training models from scratch. Current methods usually entangle the
+                  prediction of 3D Gaussian geometry and appearance, which rely
+                  heavily on data-driven priors and result in slow regression speeds.
+                  To address this, we propose Stereo-GS, a disentangled framework
+                  for efficient 3D Gaussian prediction. Our method extracts features
+                  from local image pairs using a stereo vision backbone and fuses
+                  them via global attention blocks. Dedicated point and Gaussian
+                  prediction heads generate multi-view point-maps for geometry and
+                  Gaussian features for appearance, combined as GS-maps to represent the 3DGS object. A refinement network enhances these GSmaps for high-quality reconstruction. Unlike existing methods that
+                  depend on camera parameters, our approach achieves pose-free 3D
+                  reconstruction, improving robustness and practicality. By reducing resource demands while maintaining high-quality outputs, StereoGS provides an efficient, scalable solution for real-world 3D content
+                  generation.
+                  </p>
+                </div>
+            </div>
+          </div>
+        </section>
       </div>
     </div>
     <!--/ Abstract. -->
